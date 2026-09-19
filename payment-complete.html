@@ -1,1 +1,328 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payment Complete | SweetBite</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    Sweet<span>Bite</span>
+  </a>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="menu.html">Menu</a>
+    <a href="categories.html">Categories</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
+    <a href="support.html">Help & Support</a>
+    <a href="orders.html">My Orders</a>
+  </nav>
+
+  <a class="cart" href="checkout.html">
+    🛒 Cart <b id="cartCount">0</b>
+  </a>
+</header>
+
+
+<main class="page">
+
+  <div id="paymentResult" style="text-align:center;">
+    <p class="eyebrow">PAYMENT</p>
+
+    <h1>Checking your payment...</h1>
+
+    <p>
+      Please wait while we securely verify your Paystack payment.
+    </p>
+  </div>
+
+</main>
+
+
+<footer>
+  <strong>SweetBite</strong>
+
+  <span>
+    Healthy snacks and pastries
+  </span>
+
+  <span>
+    WhatsApp: 09041130288 • Call: 08029927866
+  </span>
+
+  <span>
+    © 2026 SweetBite
+  </span>
+</footer>
+
+
+<script src="app.js"></script>
+
+<script>
+
+async function verifyPayment() {
+
+  const resultBox =
+    document.getElementById("paymentResult");
+
+  const params =
+    new URLSearchParams(window.location.search);
+
+  const reference =
+    params.get("reference");
+
+  if (!reference) {
+
+    resultBox.innerHTML = `
+      <p class="eyebrow">PAYMENT ERROR</p>
+
+      <h1>Payment reference not found.</h1>
+
+      <p>
+        We could not find your Paystack payment reference.
+      </p>
+
+      <br>
+
+      <a class="btn" href="checkout.html">
+        Return to checkout
+      </a>
+    `;
+
+    return;
+  }
+
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/paystack/verify/" +
+        encodeURIComponent(reference)
+      );
+
+    const result =
+      await response.json();
+
+
+    if (!response.ok || !result.ok) {
+
+      throw new Error(
+        result.error ||
+        "Payment could not be verified."
+      );
+    }
+
+
+    const order =
+      result.order;
+
+
+    /*
+      Save the successful order locally
+      so it can appear on My Orders.
+    */
+
+    const existingOrders =
+      JSON.parse(
+        localStorage.getItem("sweetbiteOrders") ||
+        "[]"
+      );
+
+
+    const orderMessage =
+      `SWEETBITE PAID ORDER
+Order: ${order.order_number}
+Customer: ${order.customer_name}
+Phone: ${order.customer_phone}
+Address: ${order.delivery_address}
+
+Payment: PAID
+Total: ₦${Number(
+        order.total_amount
+      ).toLocaleString()}`;
+
+
+    const alreadySaved =
+      existingOrders.some(
+        x => x.id === order.order_number
+      );
+
+
+    if (!alreadySaved) {
+
+      existingOrders.unshift({
+        id: order.order_number,
+        date: new Date().toLocaleString(),
+        msg: orderMessage,
+        total: Number(order.total_amount)
+      });
+
+      localStorage.setItem(
+        "sweetbiteOrders",
+        JSON.stringify(existingOrders)
+      );
+    }
+
+
+    /*
+      Clear the cart only after
+      successful payment verification.
+    */
+
+    localStorage.removeItem(
+      "sweetbiteCart"
+    );
+
+    localStorage.removeItem(
+      "sweetbitePendingPayment"
+    );
+
+
+    /*
+      Create WhatsApp notification link.
+    */
+
+    const whatsappMessage =
+      `SWEETBITE NEW PAID ORDER
+
+Order: ${order.order_number}
+
+Customer: ${order.customer_name}
+
+Phone: ${order.customer_phone}
+
+Address: ${order.delivery_address}
+
+Payment: PAID
+
+Total: ₦${Number(
+        order.total_amount
+      ).toLocaleString()}
+
+Please prepare the order.`;
+
+
+    const whatsappUrl =
+      "https://wa.me/2349041130288?text=" +
+      encodeURIComponent(
+        whatsappMessage
+      );
+
+
+    resultBox.innerHTML = `
+
+      <p class="eyebrow">
+        PAYMENT SUCCESSFUL
+      </p>
+
+      <h1>Thank you for your order! 🎉</h1>
+
+      <p>
+        Your payment has been successfully verified.
+      </p>
+
+      <div class="payment">
+
+        <h2>Order confirmed</h2>
+
+        <p>
+          Order number:
+          <strong>${order.order_number}</strong>
+        </p>
+
+        <p>
+          Payment status:
+          <strong>PAID</strong>
+        </p>
+
+        <p>
+          Total paid:
+          <strong>
+            ₦${Number(
+              order.total_amount
+            ).toLocaleString()}
+          </strong>
+        </p>
+
+      </div>
+
+      <br>
+
+      <a
+        class="btn"
+        href="${whatsappUrl}"
+        target="_blank"
+      >
+        💬 Send Order to WhatsApp
+      </a>
+
+      <a
+        class="btn secondary"
+        href="orders.html"
+      >
+        My Orders
+      </a>
+
+      <a
+        class="btn secondary"
+        href="index.html"
+      >
+        Back to SweetBite
+      </a>
+
+    `;
+
+  } catch (error) {
+
+    console.error(
+      "Payment verification error:",
+      error
+    );
+
+
+    resultBox.innerHTML = `
+
+      <p class="eyebrow">
+        PAYMENT VERIFICATION
+      </p>
+
+      <h1>We could not verify the payment.</h1>
+
+      <p>
+        Your payment has not been marked as a completed
+        SweetBite order yet.
+      </p>
+
+      <p class="tiny">
+        Please do not pay again immediately.
+        Contact SweetBite if your account was charged.
+      </p>
+
+      <br>
+
+      <a
+        class="btn"
+        href="checkout.html"
+      >
+        Return to checkout
+      </a>
+
+    `;
+  }
+}
+
+
+verifyPayment();
+
+</script>
+
+</body>
+</html>
