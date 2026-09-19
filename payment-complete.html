@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -76,7 +75,8 @@ async function verifyPayment() {
     new URLSearchParams(window.location.search);
 
   const reference =
-    params.get("reference");
+    params.get("reference") ||
+    params.get("trxref");
 
   if (!reference) {
 
@@ -97,6 +97,23 @@ async function verifyPayment() {
     `;
 
     return;
+  }
+
+
+  /*
+    Get the payment information that was saved
+    before the customer went to Paystack.
+  */
+  let pendingPayment = null;
+
+  try {
+    pendingPayment =
+      JSON.parse(
+        localStorage.getItem("sweetbitePendingPayment") ||
+        "null"
+      );
+  } catch (e) {
+    pendingPayment = null;
   }
 
 
@@ -126,6 +143,117 @@ async function verifyPayment() {
 
 
     /*
+      Get ordered items from the pending payment.
+    */
+    const orderedItems =
+      Array.isArray(pendingPayment?.items)
+        ? pendingPayment.items
+        : [];
+
+
+    /*
+      Build item display.
+    */
+    let itemsHtml = "";
+
+    if (orderedItems.length) {
+
+      itemsHtml = orderedItems.map(item => {
+
+        const name =
+          item.name ||
+          item.product_name ||
+          "Product";
+
+        const qty =
+          Number(
+            item.qty ??
+            item.quantity ??
+            1
+          );
+
+        const price =
+          Number(
+            item.price ??
+            item.unit_price ??
+            0
+          );
+
+        const lineTotal =
+          price * qty;
+
+        return `
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            gap:20px;
+            padding:12px 0;
+            border-bottom:1px solid #eadfce;
+            text-align:left;
+          ">
+            <div>
+              <strong>${name}</strong>
+              <div class="tiny">
+                Quantity: ${qty}
+              </div>
+            </div>
+
+            <strong>
+              ₦${lineTotal.toLocaleString()}
+            </strong>
+          </div>
+        `;
+
+      }).join("");
+
+    } else {
+
+      itemsHtml = `
+        <p class="tiny">
+          Order items are available in your order record.
+        </p>
+      `;
+    }
+
+
+    /*
+      Calculate delivery fee.
+    */
+    const total =
+      Number(order.total_amount || 0);
+
+    const itemSubtotal =
+      orderedItems.reduce(
+        (sum, item) => {
+
+          const qty =
+            Number(
+              item.qty ??
+              item.quantity ??
+              1
+            );
+
+          const price =
+            Number(
+              item.price ??
+              item.unit_price ??
+              0
+            );
+
+          return sum + (price * qty);
+
+        },
+        0
+      );
+
+    const deliveryFee =
+      Math.max(
+        0,
+        total - itemSubtotal
+      );
+
+
+    /*
       Save the successful order locally
       so it can appear on My Orders.
     */
@@ -139,15 +267,37 @@ async function verifyPayment() {
 
     const orderMessage =
       `SWEETBITE PAID ORDER
+
 Order: ${order.order_number}
+
 Customer: ${order.customer_name}
+
 Phone: ${order.customer_phone}
+
 Address: ${order.delivery_address}
 
+Items:
+${orderedItems.map(item => {
+
+  const name =
+    item.name ||
+    item.product_name ||
+    "Product";
+
+  const qty =
+    Number(
+      item.qty ??
+      item.quantity ??
+      1
+    );
+
+  return `- ${name} x ${qty}`;
+
+}).join("\n")}
+
 Payment: PAID
-Total: ₦${Number(
-        order.total_amount
-      ).toLocaleString()}`;
+
+Total: ₦${total.toLocaleString()}`;
 
 
     const alreadySaved =
@@ -159,10 +309,24 @@ Total: ₦${Number(
     if (!alreadySaved) {
 
       existingOrders.unshift({
+
         id: order.order_number,
-        date: new Date().toLocaleString(),
-        msg: orderMessage,
-        total: Number(order.total_amount)
+
+        date:
+          new Date().toLocaleString(),
+
+        msg:
+          orderMessage,
+
+        total:
+          total,
+
+        items:
+          orderedItems,
+
+        delivery_fee:
+          deliveryFee
+
       });
 
       localStorage.setItem(
@@ -187,8 +351,30 @@ Total: ₦${Number(
 
 
     /*
-      Create WhatsApp notification link.
+      WhatsApp notification.
     */
+
+    const whatsappItems =
+      orderedItems.length
+        ? orderedItems.map(item => {
+
+            const name =
+              item.name ||
+              item.product_name ||
+              "Product";
+
+            const qty =
+              Number(
+                item.qty ??
+                item.quantity ??
+                1
+              );
+
+            return `- ${name} x ${qty}`;
+
+          }).join("\n")
+        : "Order items recorded in database.";
+
 
     const whatsappMessage =
       `SWEETBITE NEW PAID ORDER
@@ -201,11 +387,12 @@ Phone: ${order.customer_phone}
 
 Address: ${order.delivery_address}
 
+ITEMS:
+${whatsappItems}
+
 Payment: PAID
 
-Total: ₦${Number(
-        order.total_amount
-      ).toLocaleString()}
+Total: ₦${total.toLocaleString()}
 
 Please prepare the order.`;
 
@@ -217,17 +404,24 @@ Please prepare the order.`;
       );
 
 
+    /*
+      Successful confirmation page.
+    */
+
     resultBox.innerHTML = `
 
       <p class="eyebrow">
         PAYMENT SUCCESSFUL
       </p>
 
-      <h1>Thank you for your order! 🎉</h1>
+      <h1>
+        Thank you for your order! 🎉
+      </h1>
 
       <p>
         Your payment has been successfully verified.
       </p>
+
 
       <div class="payment">
 
@@ -243,18 +437,47 @@ Please prepare the order.`;
           <strong>PAID</strong>
         </p>
 
-        <p>
-          Total paid:
+        <hr>
+
+        <h3 style="text-align:left;">
+          Items ordered
+        </h3>
+
+        ${itemsHtml}
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          padding-top:16px;
+          text-align:left;
+        ">
+          <strong>Delivery</strong>
+
           <strong>
-            ₦${Number(
-              order.total_amount
-            ).toLocaleString()}
+            ₦${deliveryFee.toLocaleString()}
           </strong>
-        </p>
+        </div>
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          padding-top:16px;
+          margin-top:12px;
+          border-top:2px solid #d8c5ae;
+          text-align:left;
+        ">
+          <strong>Total paid</strong>
+
+          <strong>
+            ₦${total.toLocaleString()}
+          </strong>
+        </div>
 
       </div>
 
+
       <br>
+
 
       <a
         class="btn"
@@ -264,12 +487,14 @@ Please prepare the order.`;
         💬 Send Order to WhatsApp
       </a>
 
+
       <a
         class="btn secondary"
         href="orders.html"
       >
         My Orders
       </a>
+
 
       <a
         class="btn secondary"
@@ -294,7 +519,9 @@ Please prepare the order.`;
         PAYMENT VERIFICATION
       </p>
 
-      <h1>We could not verify the payment.</h1>
+      <h1>
+        We could not verify the payment.
+      </h1>
 
       <p>
         Your payment has not been marked as a completed
