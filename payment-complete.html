@@ -12,7 +12,7 @@
 <header>
   <a class="logo" href="index.html">
     Sweet<span>Bite</span>
-  </a>
+  </a> 
 
   <nav>
     <a href="index.html">Home</a>
@@ -145,11 +145,17 @@ async function verifyPayment() {
     /*
       Get ordered items from the pending payment.
     */
-    const orderedItems =
+    /*const orderedItems =
       Array.isArray(pendingPayment?.items)
         ? pendingPayment.items
-        : [];
+        : [];   */
 
+    const orderedItems =
+  Array.isArray(order.order_items)
+    ? order.order_items
+    : Array.isArray(pendingPayment?.items)
+      ? pendingPayment.items
+      : [];
 
     /*
       Build item display.
