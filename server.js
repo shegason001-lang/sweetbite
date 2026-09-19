@@ -98,12 +98,16 @@ async function validateCart(items) {
   }
 
   const names = [
-    ...new Set(
-      items
-        .map((x) => String(x?.name || '').trim())
-        .filter(Boolean)
-    )
-  ];
+  ...new Set(
+    items
+      .map((x) =>
+        String(
+          x?.name || x?.product_name || ''
+        ).trim()
+      )
+      .filter(Boolean)
+  )
+];
 
   const { data: products, error } = await supabase
     .from('products')
