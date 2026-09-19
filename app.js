@@ -7,7 +7,7 @@ const bread = [
   "Ostreech",
   "Bilkebab"
 ];
- 
+  
 const products = [
   ...bread.map((n, i) => ({
     id: "bread-" + i,
@@ -286,16 +286,16 @@ async function payAndPlaceOrder() {
     }
 
     localStorage.setItem(
-      "sweetbitePendingPayment",
-      JSON.stringify({
-        reference: result.reference,
-        customer_name: payload.customer_name,
-        customer_email: payload.customer_email,
-        customer_phone: payload.customer_phone,
-        delivery_address: payload.delivery_address
-      })
-    );
-
+  "sweetbitePendingPayment",
+  JSON.stringify({
+    reference: result.reference,
+    customer_name: payload.customer_name,
+    customer_email: payload.customer_email,
+    customer_phone: payload.customer_phone,
+    delivery_address: payload.delivery_address,
+    items: payload.items
+  })
+);
     if (status) {
       status.textContent =
         "Redirecting you to secure Paystack payment...";
