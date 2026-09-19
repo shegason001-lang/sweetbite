@@ -19,7 +19,7 @@ const SITE_URL =
   process.env.SITE_URL ||
   process.env.RENDER_EXTERNAL_URL ||
   'http://localhost:10000';
-
+ 
 const WA_NUMBER = '2349041130288';
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
