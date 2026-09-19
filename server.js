@@ -119,15 +119,26 @@ async function validateCart(items) {
   );
 
   const cleanItems = [];
+/* -------------------------------------------------------
+   PRODUCT AND QTY
+------------------------------------------------------- */
+for (const raw of items) {
+  const name = String(
+    raw?.name || raw?.product_name || ''
+  ).trim();
 
-  for (const raw of items) {
-    const name = String(raw?.name || '').trim();
-    const product = byName.get(name);
+  const product = byName.get(name);
 
-    const qty = Math.max(
-      1,
-      Math.min(50, Number.parseInt(raw?.qty, 10) || 0)
-    );
+  const qty = Math.max(
+    1,
+    Math.min(
+      50,
+      Number.parseInt(
+        raw?.qty ?? raw?.quantity,
+        10
+      ) || 0
+    )
+  );
 
     if (!product || !product.is_available || qty < 1) {
       throw new Error(
@@ -728,7 +739,7 @@ app.post('/api/paystack/webhook', async (req, res) => {
   }
 });
 
-/* -------------------------------------------------------
+/* ------------------------------------------------------
    ORDER LOOKUP
 ------------------------------------------------------- */
 
