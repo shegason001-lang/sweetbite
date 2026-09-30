@@ -552,7 +552,7 @@ console.log(
       const { cleanItems, subtotal } =
         await validateCart(metadata.items);
 
-      const expectedAmount =
+  /*** const expectedAmount =
         (subtotal + delivery_fee) * 100;
 
       if (Number(data.amount) !== expectedAmount) {
@@ -561,7 +561,19 @@ console.log(
           'Payment amount does not match the order',
           400
         );
-      }
+      }***/
+     const expectedAmount =
+  (subtotal + delivery_fee) * 100;
+
+if (
+  Number(data.requested_amount) !== expectedAmount
+) {
+  return bad(
+    res,
+    'Payment amount does not match the order',
+    400
+  );
+}
 
       const order = await createPaidOrder({
         customer_name: metadata.customer_name,
@@ -719,14 +731,23 @@ app.post('/api/paystack/webhook', async (req, res) => {
       const { cleanItems, subtotal } =
         await validateCart(metadata.items);
 
-      const expectedAmount =
+    /***  const expectedAmount =
         (subtotal + delivery_fee) * 100;
 
       if (
         Number(data.amount) !== expectedAmount
       ) {
         return;
-      }
+      }**/
+
+     const expectedAmount =
+  (subtotal + delivery_fee) * 100;
+
+if (
+  Number(data.requested_amount) !== expectedAmount
+) {
+  return;
+}
 
       await createPaidOrder({
         customer_name:
