@@ -124,7 +124,7 @@ const products = [
     cat: "fresh-drinks",
     img: "images/chivita-small.jpg"
   },
-
+ 
   {
     id: "chivita-big",
     name: "Chivita Big",
