@@ -477,13 +477,31 @@ app.get(
         return bad(res, 'Payment reference is required');
       }
 
-      const payment = await paystackRequest(
+      /***const payment = await paystackRequest(
         `/transaction/verify/${encodeURIComponent(
           reference
         )}`
       );
 
-      const data = payment.data;
+      const data = payment.data;**/
+     
+     const payment = await paystackRequest(
+  `/transaction/verify/${encodeURIComponent(
+    reference
+  )}`
+);
+
+console.log(
+  'PAYSTACK VERIFY RESPONSE:',
+  JSON.stringify(payment, null, 2)
+);
+
+const data = payment.data;
+
+console.log(
+  'PAYSTACK VERIFY DATA:',
+  JSON.stringify(data, null, 2)
+);
 
       if (
         data.status !== 'success' ||
