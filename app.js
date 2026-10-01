@@ -1,21 +1,59 @@
-const bread = [
-  "K Bread",
-  "Jbest",
-  "KFF",
-  "Durable",
-  "Etree",
-  "Ostreech",
-  "Bilkebab"
-];
-
 const products = [
-  ...bread.map((n, i) => ({
-    id: "bread-" + i,
-    name: n + " Bread",
+  {
+    id: "bread-0",
+    name: "K Bread",
     price: 1500,
     cat: "bread",
-    img: `images/bread-loaf-${(i % 3) + 1}.jpg`
-  })),
+    img: "images/k-bread.jpg"
+  },
+
+  {
+    id: "bread-1",
+    name: "Jbest Bread",
+    price: 1500,
+    cat: "bread",
+    img: "images/bread-loaf-2.jpg"
+  },
+
+  {
+    id: "bread-2",
+    name: "KFF Bread",
+    price: 1500,
+    cat: "bread",
+    img: "images/bread-loaf-3.jpg"
+  },
+
+  {
+    id: "bread-3",
+    name: "Durable Bread",
+    price: 1500,
+    cat: "bread",
+    img: "images/bread-loaf-1.jpg"
+  },
+
+  {
+    id: "bread-4",
+    name: "Etree Bread",
+    price: 1500,
+    cat: "bread",
+    img: "images/bread-loaf-2.jpg"
+  },
+
+  {
+    id: "bread-5",
+    name: "Ostreech Bread",
+    price: 1500,
+    cat: "bread",
+    img: "images/bread-loaf-3.jpg"
+  },
+
+  {
+    id: "bread-6",
+    name: "Bilkebab Bread",
+    price: 1500,
+    cat: "bread",
+    img: "images/bread-loaf-1.jpg"
+  },
 
   {
     id: "bunce",
