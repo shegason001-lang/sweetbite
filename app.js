@@ -2,15 +2,15 @@ const products = [
   {
     id: "bread-0",
     name: "K Bread",
-    price: 1500,
+    price: 1300,
     cat: "bread",
     img: "images/k-bread.jpg"
   },
-
+ 
   {
     id: "bread-1",
     name: "Jbest Bread",
-    price: 1500,
+    price: 1300,
     cat: "bread",
     img: "images/bread-loaf-2.jpg"
   },
@@ -18,7 +18,7 @@ const products = [
   {
     id: "bread-2",
     name: "KFF Bread",
-    price: 1500,
+    price: 1400,
     cat: "bread",
     img: "images/bread-loaf-3.jpg"
   },
@@ -26,7 +26,7 @@ const products = [
   {
     id: "bread-3",
     name: "Durable Bread",
-    price: 1500,
+    price: 1300,
     cat: "bread",
     img: "images/bread-loaf-1.jpg"
   },
@@ -34,7 +34,7 @@ const products = [
   {
     id: "bread-4",
     name: "Etree Bread",
-    price: 1500,
+    price: 1300,
     cat: "bread",
     img: "images/bread-loaf-2.jpg"
   },
@@ -50,7 +50,7 @@ const products = [
   {
     id: "bread-6",
     name: "Bilkebab Bread",
-    price: 1500,
+    price: 1400,
     cat: "bread",
     img: "images/bread-loaf-1.jpg"
   },
@@ -426,7 +426,7 @@ async function payAndPlaceOrder() {
     Number(data.zone);
 
   if (
-    ![1500, 1750, 2000]
+    ![800, 1000, 1500]
       .includes(deliveryFee)
   ) {
 
