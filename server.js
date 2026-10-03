@@ -1,10 +1,11 @@
 import 'dotenv/config';
 import express from 'express';
 import crypto from 'crypto';
+import nodemailer from 'nodemailer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
-
+ 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
  
@@ -21,6 +22,36 @@ const SITE_URL =
   'http://localhost:10000';
  
 const WA_NUMBER = '2349041130288';
+
+/* -------------------------------------------------------
+   EMAIL ORDERS
+------------------------------------------------------- */
+
+const EMAIL_USER =
+  process.env.EMAIL_USER || 'shegason001@gmail.com';
+
+const EMAIL_PASS =
+  process.env.EMAIL_PASS;
+
+const ORDER_EMAIL =
+  process.env.ORDER_EMAIL || 'shegason001@gmail.com';
+
+const emailTransporter =
+  EMAIL_PASS
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: EMAIL_USER,
+          pass: EMAIL_PASS
+        }
+      })
+    : null;
+
+if (!EMAIL_PASS) {
+  console.warn(
+    'EMAIL_PASS is not configured - order emails are disabled'
+  );
+}
  
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.warn('Missing Supabase server environment variables');
@@ -170,6 +201,69 @@ for (const raw of items) {
   };
 }
 
+
+
+/* -------------------------------------------------------
+   SEND NEW ORDER EMAIL
+------------------------------------------------------- */
+
+async function sendOrderEmail(order) {
+  if (!emailTransporter) {
+    console.warn(
+      'Order email skipped: EMAIL_PASS is missing'
+    );
+    return;
+  }
+
+  const items = Array.isArray(order.order_items)
+    ? order.order_items
+    : [];
+
+  const itemLines = items
+    .map(
+      (item) =>
+        `${item.product_name} x ${item.quantity} = ${money(
+          item.quantity * item.unit_price
+        )}`
+    )
+    .join('\n');
+
+  const emailText = [
+    'SWEETBITE NEW PAID ORDER',
+    '',
+    `Order Number: ${order.order_number}`,
+    `Customer: ${order.customer_name}`,
+    `Phone: ${order.customer_phone}`,
+    `Email: ${order.customer_email}`,
+    `Address: ${order.delivery_address}`,
+    '',
+    'ITEMS',
+    itemLines,
+    '',
+    `Subtotal: ${money(order.subtotal)}`,
+    `Delivery: ${money(order.delivery_fee)}`,
+    `TOTAL PAID: ${money(order.total_amount)}`,
+    '',
+    'Payment Method: Paystack',
+    'Payment Status: PAID',
+    `Paystack Reference: ${order.paystack_reference}`,
+    '',
+    `Order Date: ${new Date().toLocaleString('en-NG')}`
+  ].join('\n');
+
+  await emailTransporter.sendMail({
+    from: `"SweetBite Orders" <${EMAIL_USER}>`,
+    to: ORDER_EMAIL,
+    replyTo: order.customer_email,
+    subject: `New SweetBite Order - ${order.order_number}`,
+    text: emailText
+  });
+
+  console.log(
+    `Order email sent for ${order.order_number}`
+  );
+}
+
 /* -------------------------------------------------------
    CREATE ORDER AFTER SUCCESSFUL PAYMENT
 ------------------------------------------------------- */
@@ -287,11 +381,35 @@ async function createPaidOrder({
     );
   }
 
-return {
+/**return {
   ...order,
   order_items: cleanItems
 };
+}*****/
+
+const paidOrder = {
+  ...order,
+  order_items: cleanItems
+};
+
+/*
+  Send email notification after the paid order
+  has been successfully saved.
+*/
+try {
+  await sendOrderEmail(paidOrder);
+} catch (emailError) {
+  /*
+    Do NOT fail the customer's successful payment
+    just because email delivery failed.
+  */
+  console.error(
+    'Order email failed:',
+    emailError.message
+  );
 }
+
+return paidOrder;
 
 /* -------------------------------------------------------
    PAYSTACK API
