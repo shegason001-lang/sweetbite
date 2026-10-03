@@ -21,7 +21,7 @@ const SITE_URL =
   'http://localhost:10000';
  
 const WA_NUMBER = '2349041130288';
-
+ 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.warn('Missing Supabase server environment variables');
 }
