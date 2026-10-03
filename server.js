@@ -384,12 +384,12 @@ app.post('/api/paystack/initialize', async (req, res) => {
       return bad(res, 'Delivery address is required');
     }
 
-    if (![1500, 1750, 2000].includes(delivery_fee)) {
-      return bad(
-        res,
-        'Please select a valid delivery fee: ₦1,500, ₦1,750 or ₦2,000'
-      );
-    }
+if (![800, 1000, 1500].includes(delivery_fee)) {
+  return bad(
+    res,
+    'Please select a valid delivery fee: ₦800, ₦1,000 or ₦1,500'
+  );
+}
 
     const { cleanItems, subtotal } =
       await validateCart(items);
