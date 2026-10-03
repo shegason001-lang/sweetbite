@@ -533,11 +533,11 @@ console.log(
         metadata.delivery_fee
       );
 
-      if (
-        ![1500, 1750, 2000].includes(
-          delivery_fee
-        )
-      ) {
+     if (
+  ![800, 1000, 1500].includes(
+    delivery_fee
+  )
+) {
         return bad(
           res,
           'Invalid delivery fee',
@@ -720,14 +720,13 @@ app.post('/api/paystack/webhook', async (req, res) => {
         metadata.delivery_fee
       );
 
-      if (
-        ![1500, 1750, 2000].includes(
-          delivery_fee
-        )
-      ) {
-        return;
-      }
-
+  if (
+  ![800, 1000, 1500].includes(
+    delivery_fee
+  )
+) {
+  return;
+}
       const { cleanItems, subtotal } =
         await validateCart(metadata.items);
 
