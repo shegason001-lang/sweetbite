@@ -14,7 +14,7 @@ const products = [
     cat: "bread",
     img: "images/bread-loaf-2.jpg"
   },
-
+ 
   {
     id: "bread-2",
     name: "KFF Bread",
